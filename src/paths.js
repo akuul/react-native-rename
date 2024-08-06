@@ -1,4 +1,6 @@
 import { cleanString, encodeXmlEntities } from './utils';
+import fs from 'fs';
+import path from 'path';
 
 export const androidManifestXml = 'android/app/src/main/AndroidManifest.xml';
 export const androidValuesStrings = 'android/app/src/main/res/values/strings.xml';
@@ -30,7 +32,11 @@ export const getIosFoldersAndFilesPaths = ({ currentPathContentStr, newPathConte
     `ios/${currentPathContentStr}.xcodeproj`,
     `ios/${cleanNewPathContentStr}.xcodeproj/xcshareddata/xcschemes/${currentPathContentStr}-tvOS.xcscheme`,
     `ios/${cleanNewPathContentStr}.xcodeproj/xcshareddata/xcschemes/${currentPathContentStr}.xcscheme`,
+    `ios/${cleanNewPathContentStr}.xcodeproj/xcshareddata/xcschemes/${currentPathContentStr}Development.xcscheme`,
+    `ios/${cleanNewPathContentStr}.xcodeproj/xcshareddata/xcschemes/${currentPathContentStr}Staging.xcscheme`,
     `ios/${currentPathContentStr}-Bridging-Header.h`,
+    `ios/${currentPathContentStr}Development-Info.plist`,
+    `ios/${currentPathContentStr}Staging-Info.plist`,
   ];
 };
 
@@ -50,9 +56,16 @@ export const getIosUpdateFilesContentOptions = ({
       files: 'ios/Podfile',
       from: [
         new RegExp(`\\b${currentPathContentStr}\\b`, 'g'),
+        new RegExp(`\\b${currentPathContentStr}Staging\\b`, 'g'),
+        new RegExp(`\\b${currentPathContentStr}Development\\b`, 'g'),
         new RegExp(`\\b${currentPathContentStr}Tests\\b`, 'g'),
       ],
-      to: [`${cleanNewPathContentStr}`, `${cleanNewPathContentStr}Tests`],
+      to: [
+        `${cleanNewPathContentStr}`,
+        `${cleanNewPathContentStr}Staging`,
+        `${cleanNewPathContentStr}Development`,
+        `${cleanNewPathContentStr}Tests`,
+      ],
     },
     {
       files: ['ios/*/AppDelegate.mm', 'ios/*/AppDelegate.m'],
@@ -73,6 +86,17 @@ export const getIosUpdateFilesContentOptions = ({
     {
       files: [
         'ios/*.xcodeproj/project.pbxproj',
+        'ios/*.xcodeproj/xcshareddata/xcschemes/*.xcscheme',
+      ],
+      from: [
+        new RegExp(`\\b${currentPathContentStr}Development\\b`, 'g'),
+        new RegExp(`\\b${currentPathContentStr}Staging\\b`, 'g'),
+      ],
+      to: [`${cleanNewPathContentStr}Development`, `${cleanNewPathContentStr}Staging`],
+    },
+    {
+      files: [
+        'ios/*.xcodeproj/project.pbxproj',
         'ios/*Tests/*Tests.m',
         'ios/*.xcodeproj/xcshareddata/xcschemes/*.xcscheme',
       ],
@@ -82,7 +106,9 @@ export const getIosUpdateFilesContentOptions = ({
     {
       files: 'ios/*.xcodeproj/project.pbxproj',
       from: [
-        new RegExp(/INFOPLIST_KEY_CFBundleDisplayName = "(.*)"/, 'g'),
+        new RegExp(`\\bINFOPLIST_KEY_CFBundleDisplayName = "${currentPathContentStr}"\\b`, 'g'),
+        new RegExp(`\\bINFOPLIST_KEY_CFBundleDisplayName = "${currentPathContentStr} (S)"\\b`, 'g'),
+        new RegExp(`\\bINFOPLIST_KEY_CFBundleDisplayName = "${currentPathContentStr} (D)"\\b`, 'g'),
         new RegExp(`remoteInfo = ${cleanNewPathContentStr};`, 'gi'),
         new RegExp(`\\bpath = ${cleanNewPathContentStr}Tests.xctest\\b`, 'gi'),
         new RegExp(`\\bpath = ${cleanNewPathContentStr}Tests.m\\b`, 'gi'),
@@ -108,27 +134,29 @@ export const getIosUpdateFilesContentOptions = ({
       ],
       to: [
         `INFOPLIST_KEY_CFBundleDisplayName = "${newName}"`,
-        `remoteInfo = "${cleanNewPathContentStr}";`,
-        `path = "${cleanNewPathContentStr}Tests.xctest"`,
-        `path = "${cleanNewPathContentStr}Tests.m"`,
-        `path = "${cleanNewPathContentStr}.app"`,
-        `path = "${cleanNewPathContentStr}/AppDelegate.h"`,
-        `path = "${cleanNewPathContentStr}/AppDelegate.mm"`,
-        `path = "${cleanNewPathContentStr}/Images.xcassets"`,
-        `path = "${cleanNewPathContentStr}/Info.plist"`,
-        `path = "${cleanNewPathContentStr}/main.m"`,
-        `path = "${cleanNewPathContentStr}/LaunchScreen.storyboard"`,
-        `path = "${cleanNewPathContentStr}Tests"`,
-        `name = "${cleanNewPathContentStr}Tests";`,
-        `name = "${cleanNewPathContentStr}";`,
-        `name = "${cleanNewPathContentStr}";`,
-        `productName = "${cleanNewPathContentStr}";`,
-        `productName = "${cleanNewPathContentStr}";`,
-        `productName = "${cleanNewPathContentStr}Tests;"`,
-        `INFOPLIST_FILE = "${cleanNewPathContentStr}Tests/Info.plist";`,
-        `INFOPLIST_FILE = "${cleanNewPathContentStr}/Info.plist";`,
-        `PRODUCT_NAME = "${cleanNewPathContentStr}";`,
-        `PRODUCT_NAME = "${cleanNewPathContentStr}";`,
+        `INFOPLIST_KEY_CFBundleDisplayName = "${newName} (S)"`,
+        `INFOPLIST_KEY_CFBundleDisplayName = "${newName} (D)"`,
+        `remoteInfo = ${cleanNewPathContentStr};`,
+        `path = ${cleanNewPathContentStr}Tests.xctest`,
+        `path = ${cleanNewPathContentStr}Tests.m`,
+        `path = ${cleanNewPathContentStr}.app`,
+        `path = ${cleanNewPathContentStr}/AppDelegate.h`,
+        `path = ${cleanNewPathContentStr}/AppDelegate.mm`,
+        `path = ${cleanNewPathContentStr}/Images.xcassets`,
+        `path = ${cleanNewPathContentStr}/Info.plist`,
+        `path = ${cleanNewPathContentStr}/main.m`,
+        `path = ${cleanNewPathContentStr}/LaunchScreen.storyboard`,
+        `path = ${cleanNewPathContentStr}Tests`,
+        `name = ${cleanNewPathContentStr}Tests;`,
+        `name = ${cleanNewPathContentStr};`,
+        `name = ${cleanNewPathContentStr};`,
+        `productName = ${cleanNewPathContentStr};`,
+        `productName = ${cleanNewPathContentStr};`,
+        `productName = ${cleanNewPathContentStr}Tests;`,
+        `INFOPLIST_FILE = ${cleanNewPathContentStr}Tests/Info.plist;`,
+        `INFOPLIST_FILE = ${cleanNewPathContentStr}/Info.plist;`,
+        `PRODUCT_NAME = ${cleanNewPathContentStr};`,
+        `PRODUCT_NAME = ${cleanNewPathContentStr};`,
         `${cleanNewPathContentStr}Release.entitlements`,
       ],
     },
@@ -136,6 +164,10 @@ export const getIosUpdateFilesContentOptions = ({
       files: 'ios/*.xcodeproj/project.pbxproj',
       processor: input => {
         const matchesDisplayName = input.match(/INFOPLIST_KEY_CFBundleDisplayName = "(.*)"/g);
+        const currentIosBundleId = input.match(/PRODUCT_BUNDLE_IDENTIFIER = (.*?);/)[1];
+
+        console.log(currentIosBundleId);
+
         // If there is no display name, add it
         if (matchesDisplayName === null) {
           input = input.replace(
@@ -153,9 +185,29 @@ export const getIosUpdateFilesContentOptions = ({
           );
 
           input = input.replace(
-            /PRODUCT_BUNDLE_IDENTIFIER = (.*)/g,
-            `PRODUCT_BUNDLE_IDENTIFIER = "${newBundleID}";`
+            new RegExp(`PRODUCT_BUNDLE_IDENTIFIER = ${currentIosBundleId};`, 'g'),
+            `PRODUCT_BUNDLE_IDENTIFIER = ${newBundleID};`
           );
+
+          input = input.replace(
+            new RegExp(`PRODUCT_BUNDLE_IDENTIFIER = ${currentIosBundleId}Staging;`, 'g'),
+            `PRODUCT_BUNDLE_IDENTIFIER = ${newBundleID}Staging;`
+          );
+
+          input = input.replace(
+            new RegExp(`PRODUCT_BUNDLE_IDENTIFIER = ${currentIosBundleId}Development;`, 'g'),
+            `PRODUCT_BUNDLE_IDENTIFIER = ${newBundleID}Development;`
+          );
+
+          /*   input = input.replace(
+            new RegExp(`\\bPRODUCT_BUNDLE_IDENTIFIER = ${currentPathContentStr}\\b`, 'g'),
+            `PRODUCT_BUNDLE_IDENTIFIER = ${newBundleID}Staging;`
+          );
+
+          input = input.replace(
+            new RegExp(`\\bPRODUCT_BUNDLE_IDENTIFIER = ${'foo'}\\b`, 'g'),
+            `PRODUCT_BUNDLE_IDENTIFIER = ${newBundleID}Development;`
+          ); */
         }
 
         return input;
@@ -225,6 +277,11 @@ export const getAndroidUpdateFilesContentOptions = ({
       to: `targets "${newModulesName}_appmodules"`,
     },
     {
+      files: 'android/app/build.gradle',
+      from: new RegExp(currentName, 'g'),
+      to: newName,
+    },
+    {
       files: 'android/app/src/main/jni/Android.mk',
       from: /LOCAL_MODULE \:\= (.*)_appmodules/,
       to: `LOCAL_MODULE := ${newModulesName}_appmodules`,
@@ -237,20 +294,64 @@ export const getAndroidUpdateFilesContentOptions = ({
   ];
 };
 
+const getAllProjectFiles = options => {
+  const files = fs.readdirSync(
+    path.join(process.cwd(), `android/app/src/main/java/${options.newBundleIDAsPath}`)
+  );
+  let result = [];
+  const dirFiles = [];
+
+  for (const file of files) {
+    if (
+      fs
+        .lstatSync(
+          path.join(process.cwd(), `android/app/src/main/java/${options.newBundleIDAsPath}/${file}`)
+        )
+        .isDirectory()
+    ) {
+      result.push(
+        ...getAllProjectFiles({
+          currentBundleID: [options.currentBundleID, file].join('.'),
+          newBundleID: [options.newBundleID, file].join('.'),
+          currentBundleIDAsPath: [options.currentBundleIDAsPath, file].join('/'),
+          newBundleIDAsPath: [options.newBundleIDAsPath, file].join('/'),
+        })
+      );
+    } else {
+      dirFiles.push(`android/app/src/main/java/${options.newBundleIDAsPath}/${file}`);
+    }
+  }
+
+  result = [
+    {
+      files: dirFiles,
+      from: new RegExp(`${options.currentBundleID}`, 'g'),
+      to: options.newBundleID,
+    },
+    ...result,
+  ];
+
+  return result;
+};
+
 export const getAndroidUpdateBundleIDOptions = ({
   currentBundleID,
   newBundleID,
   currentBundleIDAsPath,
   newBundleIDAsPath,
 }) => {
+  const result = getAllProjectFiles({
+    currentBundleID,
+    newBundleID,
+    currentBundleIDAsPath,
+    newBundleIDAsPath,
+  });
+
   return [
+    ...result,
     {
       files: [
-        'android/app/_BUCK',
-        'android/app/BUCK',
         'android/app/build.gradle',
-        `android/app/src/debug/java/${newBundleIDAsPath}/ReactNativeFlipper.java`,
-        `android/app/src/release/java/${newBundleIDAsPath}/ReactNativeFlipper.java`,
         `android/app/src/main/java/${newBundleIDAsPath}/MainActivity.java`,
         `android/app/src/main/java/${newBundleIDAsPath}/MainApplication.java`,
         `android/app/src/main/java/${newBundleIDAsPath}/MainActivity.kt`,
@@ -310,7 +411,12 @@ export const getOtherUpdateFilesContentOptions = ({
     },
     {
       files: 'package.json',
-      from: [new RegExp(`${packageJsonName}`, 'gi'), new RegExp(`${currentPathContentStr}`, 'gi')],
+      from: [new RegExp(`${packageJsonName}`, 'g'), new RegExp(`${currentPathContentStr}`, 'g')],
+      to: [cleanNewPathContentStr, newName],
+    },
+    {
+      files: 'yarn.lock',
+      from: new RegExp(`${packageJsonName}`, 'g'),
       to: cleanNewPathContentStr,
     },
     {

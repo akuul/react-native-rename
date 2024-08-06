@@ -1,5 +1,5 @@
 {
-  "name": "react-native-rename",
+  "name": "rename_ext",
   "version": "3.2.14",
   "description": "Rename react-native app with just one command",
   "main": "lib/index.js",
@@ -8,7 +8,7 @@
     "dev": "esbuild src/index.js --platform=node --bundle --outdir=lib --external:shelljs --watch",
     "build": "esbuild src/index.js --platform=node --bundle --outdir=lib --external:shelljs --minify --analyze",
     "prepublish": "npm run build",
-    "relink": "npm unlink react-native-rename && npm run prepublish && npm link",
+    "relink": "npm unlink rename_ext && npm run prepublish && npm link",
     "format": "prettier --write 'src/*.{js,jsx}'",
     "lint": "eslint 'src/*.{js,jsx}'"
   },
@@ -25,7 +25,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/junedomingo/react-native-rename.git"
+    "url": "git+https://github.com/akuul/react-native-rename.git"
   },
   "keywords": [
     "react-native",
@@ -40,14 +40,20 @@
     "email": "junedomingo@gmail.com",
     "name": "June Domingo"
   },
+  "maintainers": [
+    {
+      "email": "aironaskul@gmail.com",
+      "name": "Aironas Kulvelis"
+    }
+  ],
   "license": "MIT",
   "bin": {
-    "react-native-rename": "lib/index.js"
+    "rename_ext": "lib/index.js"
   },
   "bugs": {
-    "url": "https://github.com/junedomingo/react-native-rename/issues"
+    "url": "https://github.com/akuul/react-native-rename/issues"
   },
-  "homepage": "https://github.com/junedomingo/react-native-rename#readme",
+  "homepage": "https://github.com/akuul/react-native-rename#readme",
   "devDependencies": {
     "esbuild": "^0.19.2",
     "eslint": "^8.47.0",

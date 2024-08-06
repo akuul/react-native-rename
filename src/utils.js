@@ -363,6 +363,22 @@ export const updateIosNameInInfoPlist = async newName => {
     selector: 'dict > key:contains("CFBundleDisplayName") + string',
     text: newName,
   });
+
+  //DEV
+  await updateElementInXml({
+    filepath: globbySync(
+      normalizePath(path.join(APP_PATH, `ios/${newName}Development-Info.plist`))
+    )[0],
+    selector: 'dict > key:contains("CFBundleDisplayName") + string',
+    text: `${newName} (D)`,
+  });
+
+  //STAGING
+  await updateElementInXml({
+    filepath: globbySync(normalizePath(path.join(APP_PATH, `ios/${newName}Staging-Info.plist`)))[0],
+    selector: 'dict > key:contains("CFBundleDisplayName") + string',
+    text: `${newName} (S)`,
+  });
 };
 
 export const updateAndroidNameInStringsXml = async newName => {

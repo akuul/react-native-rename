@@ -131,7 +131,7 @@ program
     cleanBuilds();
     showSuccessMessages(newName);
     gitStageChanges();
-    checkPackageUpdate();
+    //checkPackageUpdate();
   });
 
 // If no arguments are passed, show help
